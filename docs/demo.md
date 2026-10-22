@@ -1,13 +1,10 @@
-# 运行效果与演示材料
+# 运行效果
 
-本目录存放项目的运行证据：真实接口记录 + 界面截图 + 架构图。
-
-- 架构图：[`architecture.svg`](architecture.svg)（README 里可直接引用）
-- 截图：放在 `docs/images/` 下，按下面清单命名即可自动被本文引用
+真实运行截图与接口记录（Ollama + qwen2.5:7b + bge-m3，本机 CPU）。架构图见 [`architecture.svg`](architecture.svg)。
 
 ## 一、真实接口记录
 
-以下为**实际运行**输出（Ollama + qwen2.5:7b + bge-m3，本机 CPU）。
+以下为**实际运行**输出。
 
 ### 1) 健康检查
 
@@ -140,19 +137,3 @@ curl -X POST http://localhost:8000/api/ask -H "Content-Type: application/json" \
 
 编号就地编辑（回车生效，磁盘文件名自动同步）、勾选多选删除、重排编号、整理文件、清空；
 列表固定高度、右侧有滚动条。
-
-### 还缺（可选，补上更完整）
-
-- 引用校验**展开明细**的截图（未标出处句 / 弱支撑句 / 逐句定位）
-- `http://127.0.0.1:8000/docs` 的 Swagger 接口文档页
-- **演示 GIF**（最推荐）：录 15~20 秒提问→点 `[1]` 跳页→展开校验，
-  用 `python tools/video_to_gif.py demo.mp4 -o docs/images/demo.gif --start 2 --end 22 --fps 10 --width 900` 转换，
-  再在本文加 `![演示](images/demo.gif)`。
-
-## 三、怎么截这些图（Windows）
-
-1. 浏览器打开 `http://127.0.0.1:8000`，按 `Win + Shift + S` 框选 → 自动进剪贴板；
-2. 粘贴到画图/微信截图工具，另存为 PNG，放到 `docs/images/`；
-3. 文件名与上面一致，GitHub 上的 README 与本文就会自动显示。
-
-建议浏览器缩放 100%、窗口宽度 ≥ 1200px，左侧"资料管理"和右侧"回答"都能完整入镜。
