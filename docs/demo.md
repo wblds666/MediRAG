@@ -144,3 +144,11 @@ curl -X POST http://localhost:8000/api/ask -H "Content-Type: application/json" \
 
 点"展开明细"会列出：未标出处的句子、与引用原文对不太上的句子、以及**逐句定位**
 （每句最像第几页 + 相邻页 + 吻合度）—— 模型不标引用时，这一列就是人工复核清单。
+
+### 8. 接口文档（Swagger UI）
+
+![接口文档](images/08-swagger.png)
+
+FastAPI 根据代码**自动生成**的交互式文档，`http://127.0.0.1:8000/docs` 打开即是：
+12 个接口、按 HTTP 方法着色（GET 蓝 / POST 绿 / PATCH 青 / DELETE 红），
+点任一接口可展开参数并 **Try it out** 直接发请求，底部 `Schemas` 是 `AskRequest` / `AskResponse` / `DocPatch` 等 Pydantic 模型的字段定义。

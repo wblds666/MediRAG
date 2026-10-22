@@ -30,7 +30,7 @@ MediRAG/
 ├── docs/
 │   ├── architecture.svg    # 架构图（README 顶部引用）
 │   ├── demo.md             # 运行效果：接口记录 + 界面截图
-│   └── images/             # 7 张截图 + 17 秒演示 GIF
+│   └── images/             # 8 张截图 + 17 秒演示 GIF
 ├── Dockerfile              # 后端镜像
 ├── nginx.conf              # Nginx：托管前端 + 反代 /api
 ├── docker-compose.yml      # 一键起 Nginx + FastAPI + Ollama
