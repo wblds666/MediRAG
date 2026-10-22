@@ -90,7 +90,7 @@ curl -X POST http://localhost:8000/api/ask -H "Content-Type: application/json" \
 
 ## 二、界面截图
 
-### 0. 演示 GIF（15 秒全流程）
+### 0. 演示 GIF（17 秒全流程）
 
 ![演示](images/demo.gif)
 

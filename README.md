@@ -3,7 +3,7 @@
 上传医疗资料 → 切分 → 向量化 → 检索 → 本地大模型（Ollama/Qwen）生成**带页码出处**的回答，
 并对每个回答自动做**引用校验**，标出"没标出处""和原文对不上"的句子。
 
-后端单文件 `app.py`（约 1400 行）+ 前端单文件 `static/index.html`（约 540 行），覆盖：
+后端单文件 `app.py`（约 1400 行）+ 前端单文件 `static/index.html`（约 580 行），覆盖：
 Web 全栈 / REST API / SQLite / RAG / 工具调用 / Docker / Nginx / 日志 / 扫描件 OCR。
 
 > ⚠️ 本项目是**技术演示**，不是医疗器械：回答仅供查阅参考，不提供诊断与处方建议。
@@ -24,11 +24,17 @@ MediRAG/
 ├── static/index.html       # 前端单页（原生 HTML/JS，无需构建）
 ├── requirements.txt        # Python 依赖
 ├── samples/                # 示例资料（2型糖尿病基层诊疗要点.txt）
-├── tools/pdf_to_text.py    # 离线把 PDF（含扫描件）转 txt，适合几百页的教材
-├── tools/video_to_gif.py   # 屏幕录制 → README 演示 GIF（两遍调色板法）
+├── tools/
+│   ├── pdf_to_text.py      # 离线把 PDF（含扫描件）转 txt，适合几百页的教材
+│   └── video_to_gif.py     # 屏幕录制 → README 演示 GIF（两遍调色板法）
+├── docs/
+│   ├── architecture.svg    # 架构图（README 顶部引用）
+│   ├── demo.md             # 运行效果：接口记录 + 界面截图
+│   └── images/             # 6 张截图 + 17 秒演示 GIF
 ├── Dockerfile              # 后端镜像
 ├── nginx.conf              # Nginx：托管前端 + 反代 /api
 ├── docker-compose.yml      # 一键起 Nginx + FastAPI + Ollama
+├── LICENSE                 # MIT
 ├── data/                   # 【运行时生成】medrag.db + uploads/（原始文件）
 └── logs/                   # 【运行时生成】medrag.log（5MB × 5 份轮转）
 ```
@@ -206,7 +212,7 @@ Word / PPT / Excel / 图片暂不支持，请先另存为 PDF。
 
 ![演示：提问 → 点引用跳原文](docs/images/demo.gif)
 
-15 秒录屏：提问"什么是水肿" → 回答带 `[1][2]` 出处 → 点 `[1]` 直接跳到 PDF 第 7 页 → 引用校验 100% ok。
+17 秒录屏：提问"什么是水肿" → 回答带 `[1][2]` 出处 → 点 `[1]` 直接跳到 PDF 第 7 页 → 引用校验 100% ok。
 
 更多截图与真实接口记录见 [`docs/demo.md`](docs/demo.md)，图片在 `docs/images/`。
 
