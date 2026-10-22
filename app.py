@@ -250,7 +250,7 @@ def init_db() -> None:
 class HashEmbeddings(Embeddings):
     """
     离线兜底向量器：不依赖任何模型，把文本的 2-gram 用 CRC32 哈希到 512 维再归一化。
-    作用：没装 Ollama 时项目照样能跑通"上传→检索→回答"全流程（效果一般，仅用于演示/自测）。
+    作用：没装 Ollama 时项目照样能跑通"上传→检索→回答"全流程（仅用于演示，效果一般）。
     注意用 zlib.crc32 而不是内置 hash()：内置 hash 每个进程随机加盐，重启后老向量就废了。
     """
 
@@ -345,7 +345,7 @@ def get_current_time(timezone: str = "Asia/Shanghai") -> str:
 
 
 TOOLS = [get_current_time]
-TOOL_MAP = {t.name: t for t in TOOLS}         # 名字 → 工具对象；模型只给"名字+参数"，执行由我们负责
+TOOL_MAP = {t.name: t for t in TOOLS}         # 名字 → 工具对象；模型只给"名字+参数"，执行由程序负责
 
 
 def time_intent(question: str) -> bool:
@@ -359,7 +359,7 @@ def time_intent(question: str) -> bool:
 # ============================================================================
 # 6. 文本抽取 + 切分：RAG 的"切分"环节
 #    注意：PDF 分两种 —— ① 电子版（有文字层）能直接抽；② 扫描件/手机拍照版（整页是图）
-#    第 ② 种必须 OCR，否则抽出来的只是一堆符号，向量化后检索永远没结果（这是最常见的坑）
+#    第 ② 种必须 OCR，否则抽出来的只是一堆符号，向量化后检索永远没结果（最常见的问题）
 # ============================================================================
 SPLITTER = RecursiveCharacterTextSplitter(
     chunk_size=CHUNK_SIZE,
@@ -931,7 +931,7 @@ async def access_log(request, call_next):
     response = await call_next(request)
     cost_ms = (time.perf_counter() - start) * 1000
     log.info("HTTP %s %s -> %s | %.1fms", request.method, request.url.path, response.status_code, cost_ms)
-    response.headers["X-Process-Time-ms"] = f"{cost_ms:.1f}"     # 顺手回给前端，方便排查慢在哪
+    response.headers["X-Process-Time-ms"] = f"{cost_ms:.1f}"     # 同时回传前端，方便定位慢在哪
     return response
 
 
@@ -1276,7 +1276,7 @@ def download_document(doc_id: int):
     path = document_path(row["stored_name"], doc_id)
     if not path:
         raise HTTPException(status_code=404, detail="原始文件不存在（可能已被清理）")
-    # 按真实类型返回：以前一律 application/pdf，导致点开 txt 时浏览器按 PDF 解析直接报错
+    # 按真实类型返回：若统一返回 application/pdf，浏览器打开 txt 会按 PDF 解析而报错
     media = {
         ".pdf": "application/pdf",
         ".csv": "text/csv",

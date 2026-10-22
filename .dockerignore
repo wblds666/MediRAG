@@ -10,3 +10,6 @@ logs/
 README.md
 docker-compose.yml
 samples/
+docs/
+*.mp4
+*.mov

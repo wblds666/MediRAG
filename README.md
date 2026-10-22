@@ -88,7 +88,7 @@ docker compose exec ollama ollama pull bge-m3
 | DELETE | `/api/documents` | 清空全部（问答日志保留） |
 | GET | `/api/qa-logs?limit=10` | 最近问答日志（含完整回答/出处/校验结果） |
 
-命令行自测：
+命令行调用示例：
 
 ```bash
 curl -F "file=@samples/2型糖尿病基层诊疗要点.txt" http://localhost:8000/api/upload
@@ -151,7 +151,6 @@ curl -X POST http://localhost:8000/api/ask -H "Content-Type: application/json" \
 | `.txt` / `.md` / `.csv` / `.json` | 直接解码（utf-8 → gb18030） | 整篇算第 1 页，按段号定位 |
 
 Word / PPT / Excel / 图片暂不支持，请先另存为 PDF。
-（曾用标准库 `zipfile` 解析过 docx/pptx/xlsx，为减少待测面已回退。）
 
 ### 判重与清理
 

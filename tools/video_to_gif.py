@@ -70,7 +70,7 @@ def main() -> int:
     for _ in range(3):
         # 高度用 -2：保证是偶数，GIF/H.264 都要求偶数尺寸
         scale = f"fps={args.fps},scale={width}:-2:flags=lanczos"
-        # 调色板放在输出目录旁边（不用系统临时目录：某些受限环境删不掉）
+        # 调色板放在输出目录旁边，不依赖系统临时目录（部分环境无权限清理）
         palette = out.with_name(out.stem + ".palette.png")
         try:
             # 第一遍：分析画面，生成最优调色板
