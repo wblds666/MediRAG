@@ -138,6 +138,9 @@ curl -X POST http://localhost:8000/api/ask -H "Content-Type: application/json" \
 
 - 引用校验**展开明细**的截图（未标出处句 / 弱支撑句 / 逐句定位）
 - `http://127.0.0.1:8000/docs` 的 Swagger 接口文档页
+- **演示 GIF**（最推荐）：录 15~20 秒提问→点 `[1]` 跳页→展开校验，
+  用 `python tools/video_to_gif.py demo.mp4 -o docs/images/demo.gif --start 2 --end 22 --fps 10 --width 900` 转换，
+  再在本文加 `![演示](images/demo.gif)`。
 
 ## 三、怎么截这些图（Windows）
 

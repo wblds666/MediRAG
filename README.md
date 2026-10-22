@@ -25,6 +25,7 @@ MediRAG/
 ├── requirements.txt        # Python 依赖
 ├── samples/                # 示例资料（2型糖尿病基层诊疗要点.txt）
 ├── tools/pdf_to_text.py    # 离线把 PDF（含扫描件）转 txt，适合几百页的教材
+├── tools/video_to_gif.py   # 屏幕录制 → README 演示 GIF（两遍调色板法）
 ├── Dockerfile              # 后端镜像
 ├── nginx.conf              # Nginx：托管前端 + 反代 /api
 ├── docker-compose.yml      # 一键起 Nginx + FastAPI + Ollama
@@ -205,6 +206,25 @@ Word / PPT / Excel / 图片暂不支持，请先另存为 PDF。
 ## 演示材料
 
 运行效果截图与真实接口记录见 [`docs/demo.md`](docs/demo.md)，图片在 `docs/images/`。
+
+### 演示 GIF（可选，效果最好）
+
+录一段 15~20 秒的操作（提问 → 点 `[1]` 跳到原文 → 展开引用校验），转成 GIF：
+
+```bash
+# 录制：Win + Alt + R（Windows 自带）、或 ScreenToGif（可直接导出 GIF）
+# 转换：截取第 2~22 秒，900px 宽、10fps
+python tools/video_to_gif.py demo.mp4 -o docs/images/demo.gif --start 2 --end 22 --fps 10 --width 900
+```
+
+脚本用**两遍调色板法**（`palettegen` → `paletteuse`）：颜色比直接 `-vf scale` 准、体积约小一半；
+超过 8 MB 会自动降宽度重试。ffmpeg 二选一：`winget install Gyan.FFmpeg`，或 `pip install imageio-ffmpeg`。
+
+然后在上面"演示材料"里加一行：
+
+```markdown
+![演示](docs/images/demo.gif)
+```
 
 ## 技术栈
 
