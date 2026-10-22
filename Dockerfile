@@ -17,6 +17,12 @@ ENV PYTHONUNBUFFERED=1 \
 
 WORKDIR /app
 
+# 系统依赖：rapidocr-onnxruntime 依赖的 opencv-python 在 slim 镜像里缺 libGL / libglib，
+# 不装这两包会导致容器内 `import cv2` 失败（扫描件 OCR 直接不可用）
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgl1 libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
 # 先只拷贝依赖清单再安装：只要依赖没变，改业务代码时这一层能命中缓存，构建快很多
 COPY requirements.txt .
 # 国内服务器/内网构建时，可换成清华源加速：
