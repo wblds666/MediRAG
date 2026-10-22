@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <path d="M0,0 L9,3 L0,6 Z" fill="#5b6b7c"/>
+    </marker>
+  </defs>
+  <rect width="960" height="470" fill="#f7fafd"/>
+
+  <text x="30" y="38" font-size="20" font-weight="bold" fill="#1f2d3d">MediRAG 架构（单机最小实现）</text>
+  <text x="30" y="62" font-size="13" fill="#7a8798">浏览器 → Nginx → FastAPI（RAG 编排）→ SQLite / Ollama / uploads</text>
+
+  <!-- 浏览器 -->
+  <rect x="30" y="95" width="160" height="86" rx="10" fill="#ffffff" stroke="#cfd8e3"/>
+  <text x="46" y="122" font-size="14" font-weight="bold" fill="#0f6ab4">浏览器</text>
+  <text x="46" y="143" font-size="12" fill="#46586c">index.html（原生 JS）</text>
+  <text x="46" y="162" font-size="12" fill="#46586c">上传 / 提问 / 点页码</text>
+
+  <!-- Nginx -->
+  <rect x="235" y="95" width="170" height="86" rx="10" fill="#ffffff" stroke="#cfd8e3"/>
+  <text x="251" y="122" font-size="14" font-weight="bold" fill="#0f6ab4">Nginx</text>
+  <text x="251" y="143" font-size="12" fill="#46586c">托管静态页（/）</text>
+  <text x="251" y="162" font-size="12" fill="#46586c">反代 /api → api:8000</text>
+
+  <!-- FastAPI -->
+  <rect x="450" y="80" width="215" height="116" rx="10" fill="#eef4fa" stroke="#0f6ab4" stroke-width="1.5"/>
+  <text x="466" y="106" font-size="14" font-weight="bold" fill="#0f6ab4">FastAPI  app.py</text>
+  <text x="466" y="128" font-size="12" fill="#1f2d3d">/api/upload（解析+OCR+向量化）</text>
+  <text x="466" y="147" font-size="12" fill="#1f2d3d">/api/ask（检索+生成+校验）</text>
+  <text x="466" y="166" font-size="12" fill="#1f2d3d">/api/documents  /api/qa-logs</text>
+  <text x="466" y="185" font-size="12" fill="#7a8798">日志 · 判重 · 编号</text>
+
+  <!-- SQLite -->
+  <rect x="735" y="60" width="195" height="66" rx="10" fill="#ffffff" stroke="#cfd8e3"/>
+  <text x="751" y="86" font-size="13" font-weight="bold" fill="#46586c">SQLite  medrag.db</text>
+  <text x="751" y="106" font-size="11" fill="#7a8798">documents / chunks / qa_logs</text>
+
+  <!-- Ollama -->
+  <rect x="735" y="140" width="195" height="66" rx="10" fill="#ffffff" stroke="#cfd8e3"/>
+  <text x="751" y="166" font-size="13" font-weight="bold" fill="#46586c">Ollama</text>
+  <text x="751" y="186" font-size="11" fill="#7a8798">qwen2.5:7b / bge-m3</text>
+
+  <!-- uploads -->
+  <rect x="735" y="220" width="195" height="64" rx="10" fill="#ffffff" stroke="#cfd8e3"/>
+  <text x="751" y="246" font-size="13" font-weight="bold" fill="#46586c">data/uploads/</text>
+  <text x="751" y="266" font-size="11" fill="#7a8798">原始 PDF → #page=N 跳页</text>
+
+  <!-- 箭头 -->
+  <line x1="190" y1="138" x2="230" y2="138" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="405" y1="138" x2="445" y2="138" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="665" y1="110" x2="730" y2="93" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="665" y1="138" x2="730" y2="170" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="665" y1="170" x2="730" y2="245" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <!-- RAG 流程 -->
+  <text x="30" y="250" font-size="15" font-weight="bold" fill="#1f2d3d">一次提问的内部流程</text>
+
+  <rect x="30" y="270" width="130" height="52" rx="8" fill="#ffffff" stroke="#cfd8e3"/>
+  <text x="44" y="292" font-size="12" fill="#1f2d3d">问题向量化</text>
+  <text x="44" y="309" font-size="11" fill="#7a8798">bge-m3</text>
+
+  <rect x="180" y="270" width="150" height="52" rx="8" fill="#ffffff" stroke="#cfd8e3"/>
+  <text x="194" y="292" font-size="12" fill="#1f2d3d">多查询改写 + 召回</text>
+  <text x="194" y="309" font-size="11" fill="#7a8798">4 条检索式 → 17 段</text>
+
+  <rect x="350" y="270" width="150" height="52" rx="8" fill="#ffffff" stroke="#cfd8e3"/>
+  <text x="364" y="292" font-size="12" fill="#1f2d3d">邻块扩展 + 预算裁剪</text>
+  <text x="364" y="309" font-size="11" fill="#7a8798">2500 字 → 3 段</text>
+
+  <rect x="520" y="270" width="150" height="52" rx="8" fill="#ffffff" stroke="#cfd8e3"/>
+  <text x="534" y="292" font-size="12" fill="#1f2d3d">Qwen 生成 + 标引用</text>
+  <text x="534" y="309" font-size="11" fill="#7a8798">[1][2][3] → 第 N 页</text>
+
+  <rect x="690" y="270" width="200" height="52" rx="8" fill="#e8f5e9" stroke="#1b7a34"/>
+  <text x="704" y="292" font-size="12" fill="#1b7a34">引用校验（覆盖/越界/弱支撑）</text>
+  <text x="704" y="309" font-size="11" fill="#1b7a34">+ 逐句归因 + 自动补引用</text>
+
+  <line x1="160" y1="296" x2="176" y2="296" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="330" y1="296" x2="346" y2="296" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="500" y1="296" x2="516" y2="296" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="670" y1="296" x2="686" y2="296" stroke="#5b6b7c" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <text x="30" y="360" font-size="12" fill="#7a8798">扫描件：PyMuPDF 渲染 → RapidOCR 识别（每页约 5 秒）；无 Ollama 时自动降级为本地哈希向量 + 摘录原文。</text>
+  <text x="30" y="384" font-size="12" fill="#7a8798">部署：Dockerfile（后端）+ nginx.conf（静态/反代）+ docker-compose（nginx + api + ollama）。</text>
+  <text x="30" y="408" font-size="12" fill="#7a8798">可观测：请求日志（方法/路径/状态/耗时）+ 轮转文件 + qa_logs（最近 10 条，含耗时与校验结果）。</text>
+</svg>

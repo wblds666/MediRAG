@@ -1,0 +1,12 @@
+# 构建镜像时不要打进上下文：数据、日志、虚拟环境、缓存都不该进镜像
+.venv/
+__pycache__/
+*.pyc
+data/
+logs/
+.piptmp/
+.git/
+.gitignore
+README.md
+docker-compose.yml
+samples/

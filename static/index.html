@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<!--
+  MediRAG 前端：单文件（HTML + CSS + 原生 JS），不依赖任何前端框架/CDN。
+  核心点：所有请求都用相对路径 /api/xxx，这样无论直接访问 FastAPI(8000)，
+          还是通过 Nginx(80/8080) 访问，前端代码都不用改 —— 这就是"同源部署"。
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MediRAG · 医疗知识库问答</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Microsoft YaHei", system-ui, sans-serif; background: #f4f7fb; color: #1f2d3d; }
+    header { background: #0f6ab4; color: #fff; padding: 14px 22px; display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 18px; margin: 0; }
+    header .tag { font-size: 12px; background: rgba(255,255,255,.2); padding: 3px 8px; border-radius: 10px; }
+    main { display: grid; grid-template-columns: 380px 1fr; gap: 16px; padding: 16px; max-width: 1280px; margin: 0 auto; }
+    @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+    .card { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 4px rgba(15,106,180,.12); }
+    .card h2 { font-size: 15px; margin: 0 0 12px; color: #0f6ab4; }
+    input[type=file] { width: 100%; margin-bottom: 10px; font-size: 13px; }
+    textarea { width: 100%; min-height: 84px; padding: 10px; border: 1px solid #cfd8e3; border-radius: 8px;
+               font-family: inherit; font-size: 14px; resize: vertical; }
+    button { background: #0f6ab4; color: #fff; border: 0; border-radius: 8px; padding: 9px 18px;
+             font-size: 14px; cursor: pointer; }
+    button:hover { background: #0c5896; }
+    button:disabled { background: #9fb6cb; cursor: not-allowed; }
+    button.ghost { background: #eef4fa; color: #0f6ab4; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .status { margin-top: 10px; font-size: 13px; color: #5b6b7c; min-height: 18px; }
+    .answer { white-space: pre-wrap; line-height: 1.75; font-size: 15px; margin-top: 8px; }
+    .meta { font-size: 12px; color: #7a8798; margin-top: 10px; }
+    ul.list { list-style: none; padding: 0; margin: 8px 0 0; font-size: 13px; }
+    ul.list li { padding: 7px 10px; border-bottom: 1px dashed #e3eaf2; }
+    ul.list li:last-child { border-bottom: 0; }
+    .score { color: #0f6ab4; font-weight: 700; }
+    .src { background: #f7fafd; border-left: 3px solid #0f6ab4; padding: 8px 10px; margin: 8px 0;
+           font-size: 13px; color: #46586c; border-radius: 0 6px 6px 0; }
+    .tool { display: inline-block; background: #e8f5e9; color: #1b7a34; border-radius: 6px;
+            padding: 2px 8px; font-size: 12px; margin-right: 6px; }
+    .empty { color: #9aa7b5; font-size: 13px; }
+    .del { float: right; background: #fdecec; color: #c0392b; padding: 2px 8px; font-size: 12px; }
+    .del:hover { background: #f8d7d7; }
+    .ocr { background: #fff4e5; color: #b26a00; padding: 1px 6px; border-radius: 4px; font-size: 12px; }
+    .queries { margin-top: 10px; font-size: 12px; color: #46586c; }
+    .queries .q { display: inline-block; background: #eef4fa; border: 1px solid #d5e4f2; border-radius: 10px;
+                  padding: 2px 9px; margin: 3px 6px 3px 0; color: #0f6ab4; }
+    .ground { margin-top: 12px; padding: 8px 12px; border-radius: 8px; font-size: 13px; }
+    .ground.ok { background: #e8f5e9; color: #1b7a34; }
+    .ground.warn { background: #fff4e5; color: #a35b00; }
+    .notice { background: #fff8e1; border: 1px solid #ffe0a3; color: #8a5a00; font-size: 12px;
+              line-height: 1.65; padding: 8px 12px; border-radius: 8px; margin-bottom: 10px; }
+    .src-title { margin-top: 14px; font-size: 12px; color: #7a8798; }
+    .pglink { display: inline-block; background: #eef4fa; border: 1px solid #d5e4f2; color: #0f6ab4;
+              border-radius: 10px; padding: 1px 8px; font-size: 12px; text-decoration: none; margin-left: 6px; }
+    .pglink:hover { background: #dcebf9; }
+    /* 引用条：回答下方第一眼就能看到、能点 */
+    .chips { margin-top: 12px; padding: 10px 12px; background: #f2f8fe; border: 1px solid #d5e4f2;
+             border-radius: 8px; font-size: 13px; line-height: 2; }
+    .chips-label { color: #46586c; margin-right: 4px; }
+    .chip { display: inline-block; background: #fff; border: 1px solid #0f6ab4; color: #0f6ab4;
+            border-radius: 14px; padding: 3px 12px; margin: 3px 6px 3px 0; font-size: 13px;
+            text-decoration: none; font-weight: 600; }
+    .chip:hover { background: #0f6ab4; color: #fff; }
+    .chip.off { background: #f4f7fb; border-color: #d5e4f2; color: #7a8798; cursor: default; font-weight: 400; }
+    .chip.off:hover { background: #f4f7fb; color: #7a8798; }
+    /* 校验明细默认折叠 */
+    .gdetail.hide { display: none; }
+    .ground { cursor: pointer; }
+    .more { float: right; font-size: 12px; opacity: .8; }
+    .cite { color: #0f6ab4; font-weight: 700; text-decoration: none; padding: 0 1px; }
+    .cite:hover { text-decoration: underline; background: #eef4fa; border-radius: 3px; }
+    .verify { margin-top: 10px; font-size: 12px; color: #8a5a00; background: #fffdf5;
+              border: 1px dashed #ffe0a3; border-radius: 8px; padding: 8px 12px; line-height: 1.7; }
+    .gl { margin-top: 8px; font-size: 12px; color: #6b5a3e; }
+    .gl ul { margin: 4px 0 0; padding-left: 18px; }
+    .no { display: inline-block; min-width: 24px; text-align: center; background: #eef4fa; color: #0f6ab4;
+          border-radius: 6px; font-weight: 700; cursor: pointer; padding: 0 6px; margin-right: 6px; }
+    .no:hover { background: #0f6ab4; color: #fff; }
+    /* 工具栏：按钮不再用 float，避免和标题文字挤在一起 */
+    .toolbar { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 6px; }
+    .toolbar button { padding: 5px 12px; font-size: 13px; }
+    .toolbar .danger { background: #fdecec; color: #c0392b; }
+    .toolbar .danger:hover { background: #f8d7d7; }
+    /* 编号就地编辑框：长得像标签，点进去就能改 */
+    input.noedit { width: 46px; text-align: center; font-weight: 700; color: #0f6ab4;
+                   background: #eef4fa; border: 1px solid #d5e4f2; border-radius: 6px;
+                   padding: 1px 2px; margin-right: 6px; font-size: 13px; font-family: inherit; }
+    input.noedit:focus { outline: 2px solid #0f6ab4; background: #fff; }
+    /* 右下角轻提示 */
+    #toast { position: fixed; right: 20px; bottom: 20px; background: #1f2d3d; color: #fff;
+             padding: 9px 16px; border-radius: 8px; font-size: 13px; opacity: 0; pointer-events: none;
+             transform: translateY(10px); transition: all .25s; z-index: 999; max-width: 60vw; }
+    #toast.show { opacity: .95; transform: translateY(0); }
+    .pick { margin-right: 8px; vertical-align: middle; width: 15px; height: 15px; cursor: pointer; }
+    .hint { font-size: 12px; color: #0f6ab4; font-weight: 400; margin-left: 8px; }
+    /* 资料列表：固定高度 + 常显滚动条（Windows 默认会隐藏滚动条，不加样式看不出来能滚） */
+    ul.list.scroll { max-height: 240px; overflow-y: auto; overscroll-behavior: contain;
+                     scrollbar-width: thin; scrollbar-color: #b9cde0 #eef4fa;
+                     border: 1px solid #eef2f7; border-radius: 8px; padding-right: 4px; }
+    ul.list.scroll::-webkit-scrollbar { width: 9px; }
+    ul.list.scroll::-webkit-scrollbar-track { background: #eef4fa; border-radius: 5px; }
+    ul.list.scroll::-webkit-scrollbar-thumb { background: #b9cde0; border-radius: 5px; }
+    ul.list.scroll::-webkit-scrollbar-thumb:hover { background: #8fb0cc; }
+    ul.list.scroll li { padding-right: 6px; }
+    .doccount { font-size: 12px; color: #7a8798; }
+    /* 问答日志：点击展开历史回答 */
+    .logitem { cursor: pointer; }
+    .logitem:hover { background: #f7fafd; }
+    .loghead { color: #7a8798; font-size: 12px; }
+    .logq { color: #1f2d3d; font-size: 13px; margin-top: 2px; }
+    .logdetail { margin-top: 8px; padding: 8px 10px; background: #f7fafd; border-left: 3px solid #0f6ab4;
+                 border-radius: 0 6px 6px 0; font-size: 12px; color: #46586c; white-space: pre-wrap;
+                 line-height: 1.7; max-height: 260px; overflow-y: auto; }
+    .logdetail.hide { display: none; }
+    .logdetail b { color: #1f2d3d; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>MediRAG · 医疗知识库问答</h1>
+    <span class="tag">FastAPI + LangChain + Ollama/Qwen + SQLite</span>
+    <span class="tag" id="health">检查中…</span>
+    <span class="tag" id="uiVer">UI v18</span>
+  </header>
+
+  <main>
+    <!-- ============ 左侧：资料上传 + 已入库资料 ============ -->
+    <div>
+      <div class="card">
+        <h2>① 上传医疗资料</h2>
+        <input type="file" id="file" multiple accept=".txt,.md,.csv,.json,.pdf" />
+        <div class="row">
+          <button id="btnUpload" onclick="upload()">上传并入库</button>
+          <span class="empty">可 Ctrl 多选；支持 PDF（扫描件自动 OCR）与纯文本 .txt/.md/.csv/.json</span>
+        </div>
+        <div class="status" id="uploadStatus"></div>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <h2>② 已入库资料 <span class="hint" id="docHint"></span></h2>
+        <div class="toolbar">
+          <button class="ghost" onclick="loadDocs()">刷新</button>
+          <button class="ghost" onclick="toggleAll()">全选</button>
+          <button class="ghost" onclick="delSelected()">删除所选</button>
+          <button class="ghost" onclick="renumber()">重排编号</button>
+          <button class="ghost" onclick="tidyFiles()">整理文件</button>
+          <button class="ghost danger" onclick="clearAll()">清空</button>
+        </div>
+        <div class="empty" style="margin-bottom:6px;">
+          编号可直接改（1-999，清空 = 自动编号），改完按<b>回车</b>生效，<b>磁盘文件名会自动同步</b>；
+          列表固定高度、<b>可上下滚动</b>（右侧有滚动条）。<span class="doccount" id="docCount"></span>
+        </div>
+        <ul class="list scroll" id="docList" style="max-height:180px; overflow-y:auto;"><li class="empty">加载中…</li></ul>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <h2>③ 最近问答日志
+          <button class="ghost" style="float:right;padding:4px 10px;" onclick="loadLogs()">刷新</button>
+        </h2>
+        <div class="empty" style="margin-bottom:6px;">只保留最近 10 条（超出自动删除最早的）；点任意一条展开完整回答与出处。</div>
+        <ul class="list scroll" id="logList"><li class="empty">暂无记录</li></ul>
+      </div>
+    </div>
+
+    <!-- ============ 右侧：提问 + 回答展示 ============ -->
+    <div class="card">
+      <h2>④ 向知识库提问</h2>
+
+      <!-- 常驻免责提示：AI 可能"引用标对了但内容说错了"，必须始终可见，不能只在校验失败时弹 -->
+      <div class="notice">
+        ⚠️ <b>AI 生成内容，仅供查阅参考</b>：模型可能把原文改写错、张冠李戴
+        （实测例子：把钩虫"丝状蚴钻入皮肤"说成"虫卵在皮肤下孵化"）。
+        请务必按下方来源里的 <b>第 N 页</b> 核对原文；本系统<b>不提供诊断与处方建议</b>，不能替代医生判断。<br>
+        🔢 <b>回答里的 [1][2][3] 可以直接点</b>：点开就跳到原文对应页；回答下方也有同编号的来源清单（含页码）。
+      </div>
+
+      <textarea id="question" placeholder="例如：2 型糖尿病患者的一线用药是什么？&#10;或者试试工具调用：现在几点了？"></textarea>
+      <div class="row" style="margin-top:10px;">
+        <button id="btnAsk" onclick="ask()">提问</button>
+        <label class="empty" title="Top-K：每次从知识库里取相似度最高的前 K 段资料，拼进 Prompt 给大模型。K 大=覆盖全但容易夹带无关内容且变慢；K 小=聚焦但可能漏。">
+          检索段数 Top-K
+          <input type="number" id="topK" value="4" min="1" max="10" style="width:56px;" />
+        </label>
+        <span class="empty">回答只依据已入库资料，并给出页码与引用校验</span>
+      </div>
+      <div class="status" id="askStatus"></div>
+
+      <div id="queryBox"></div>
+      <div id="toolBox"></div>
+      <div class="answer" id="answerBox"></div>
+      <!-- 引用条：紧跟回答，不用往下翻就能点开原文 -->
+      <div id="citeChips"></div>
+      <div id="verifyBox"></div>
+      <div class="meta" id="metaBox"></div>
+      <div id="groundBox"></div>
+      <div id="sourceBox"></div>
+    </div>
+  </main>
+
+<script>
+// ============ 通用请求封装：统一处理 HTTP 错误，把后端返回的 detail 抛出来 ============
+async function callApi(url, options) {
+  const res = await fetch(url, options);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.detail || ('HTTP ' + res.status));
+  return data;
+}
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// 模型爱输出 markdown（**加粗**、- 列表），这里是纯文本展示，先清掉记号，避免满屏星号
+const fmtAnswer = (t) => String(t || '')
+  .replace(/\*\*/g, '')
+  .replace(/^#{1,6}\s*/gm, '')
+  .replace(/^-\s+/gm, '· ');
+
+// 只有 PDF 才有真实页码、能"跳到第 N 页"；txt/md 等纯文本没有页的概念，只显示段号
+const isPdf = (o) => !!o && (o.file_type || '') === '.pdf';
+
+// 渲染回答：把句中的 [1][2] 直接变成可点链接 —— 看到哪句想核对，就地就能点开原文对应页
+function renderAnswer(text, sources) {
+  let html = esc(fmtAnswer(text));
+  html = html.replace(/\[(\d+)\]/g, (m, n) => {
+    const s = (sources || []).find((x) => String(x.index) === n);
+    if (!s || !isPdf(s) || !s.page) return m;      // 非 PDF 不生成跳页链接
+    return `<a class="cite" target="_blank" rel="noopener" title="打开原文第 ${s.page} 页" ` +
+      `onclick="event.stopPropagation()" ` +
+      `href="/api/documents/${s.doc_id}/file#page=${s.page}">[${n}]</a>`;
+  });
+  return html;
+}
+
+// 校验明细的展开/收起
+function toggleDetail(el) {
+  const d = el.nextElementSibling;
+  if (!d) return;
+  d.classList.toggle('hide');
+  const more = el.querySelector('.more');
+  if (more) more.textContent = d.classList.contains('hide') ? '展开明细 ▾' : '收起明细 ▴';
+}
+
+// ============ 健康检查：页面顶栏显示后端状态和当前用的模型 ============
+async function loadHealth() {
+  try {
+    const d = await callApi('/api/health');
+    $('health').textContent = `资料 ${d.documents} 份 / 段落 ${d.chunks} 段 · ${d.llm}`;
+  } catch (e) {
+    $('health').textContent = '后端未连接';
+  }
+}
+
+// ============ 上传：支持一次选多个文件，逐个串行处理（OCR 很吃 CPU，串行更稳）============
+async function upload() {
+  const files = Array.from($('file').files || []);
+  if (!files.length) { $('uploadStatus').textContent = '请先选择文件'; return; }
+
+  $('btnUpload').disabled = true;
+  const lines = [];
+  let ok = 0, fail = 0, dup = 0;
+
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i];
+    lines.push(`⏳ (${i + 1}/${files.length}) 正在处理：${esc(f.name)}`);
+    $('uploadStatus').innerHTML = lines.join('<br>');
+    $('uploadStatus').textContent += '（扫描件会自动 OCR，每页约 5 秒）';
+
+    const fd = new FormData();
+    fd.append('file', f);                 // 字段名必须和后端 file: UploadFile = File(...) 一致
+    try {
+      const d = await callApi('/api/upload', { method: 'POST', body: fd });
+      ok++;
+      const src = d.source === 'ocr' ? 'OCR 识别' : '文字层';
+      lines[lines.length - 1] =
+        `✅ ${esc(d.title)}：${d.pages} 页 / ${d.chars} 字 → ${d.chunks} 段（${src}）`;
+    } catch (e) {
+      if (/已入库/.test(e.message)) {        // 409：内容重复，直接跳过（不算失败）
+        dup++;
+        lines[lines.length - 1] = `⏭ 已跳过（重复文件）：${esc(f.name)}`;
+      } else {
+        fail++;
+        lines[lines.length - 1] = `❌ ${esc(f.name)}：${esc(e.message)}`;
+      }
+    }
+    $('uploadStatus').innerHTML = lines.join('<br>');
+  }
+
+  lines.push(`—— 完成：成功 ${ok} 个${dup ? `，跳过重复 ${dup} 个` : ''}${fail ? `，失败 ${fail} 个` : ''} ——`);
+  $('uploadStatus').innerHTML = lines.join('<br>');
+  $('btnUpload').disabled = false;
+  $('file').value = '';                   // 清空选择，方便继续传
+  loadDocs(); loadHealth();
+}
+
+// ============ 提问：POST JSON，渲染答案 + 引用出处 + 工具调用轨迹 ============
+async function ask() {
+  const question = $('question').value.trim();
+  if (!question) { $('askStatus').textContent = '请输入问题'; return; }
+  $('btnAsk').disabled = true;
+  $('askStatus').textContent = '检索资料并生成回答中…';
+  $('answerBox').textContent = '';
+  $('metaBox').textContent = '';
+  $('sourceBox').innerHTML = '';
+  $('toolBox').innerHTML = '';
+  $('queryBox').innerHTML = '';
+  $('groundBox').innerHTML = '';
+  $('verifyBox').innerHTML = '';
+  $('citeChips').innerHTML = '';
+  try {
+    const d = await callApi('/api/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question, top_k: Number($('topK').value) || 4 })
+    });
+    $('askStatus').textContent = '';
+    $('answerBox').innerHTML = renderAnswer(d.answer, d.sources);
+    $('metaBox').textContent = `模型：${d.model} · 耗时：${d.latency_ms} ms · 命中 ${d.sources.length} 段资料 · 仅供查阅参考，请核对原文`;
+
+    // 常驻核对指引：只留一句操作提示（完整免责声明在页面顶部，避免重复刷屏）
+    $('verifyBox').innerHTML = `<div class="verify">📌 <b>核对三步</b>：` +
+      `① 看句末的 [n] → ② 点上方「第 N 页 ↗」直接打开原文 → ③ 校验明细里标出的句子优先看。` +
+      `<span style="color:#a35b00;">校验通过不等于内容正确，请以原文为准。</span></div>`;
+
+    // 复杂问题会被拆成多条检索式（多查询改写），展示出来方便判断"它到底去哪儿找了"
+    if (d.queries && d.queries.length > 1) {
+      $('queryBox').innerHTML = '<div class="queries">🔍 本次检索式：' +
+        d.queries.map(q => `<span class="q">${esc(q)}</span>`).join('') + '</div>';
+    }
+
+    // 工具调用轨迹：证明模型真的"调了工具"而不是自己编时间
+    if (d.tool_calls && d.tool_calls.length) {
+      $('toolBox').innerHTML = '<div style="margin-top:10px;">' +
+        d.tool_calls.map(t => `<span class="tool">🛠 ${esc(t.name)}(${esc(JSON.stringify(t.args))}) · ${esc(t.mode)}</span>`).join('') +
+        '</div>';
+    }
+
+    // ① 引用条：紧跟回答，一眼看到出处并能直接点开原文对应页（仅 PDF 可跳页）
+    $('citeChips').innerHTML = '<div class="chips"><span class="chips-label">📎 出处（PDF 可点页码跳转）：</span>' +
+      d.sources.map(s => {
+        if (!isPdf(s) || !s.page) {
+          return `<span class="chip off">[${s.index}] 第 ${s.chunk_index} 段</span>`;
+        }
+        return `<a class="chip" target="_blank" rel="noopener" ` +
+          `href="/api/documents/${s.doc_id}/file#page=${s.page}">[${s.index}] 第 ${s.page} 页 ↗</a>`;
+      }).join('') + '</div>';
+
+    // ② 引用校验：默认只显示一行摘要，点开才看明细
+    //    （一上来摆一堆红字会让人觉得"全是错的"，先给结论，细节按需展开）
+    const g = d.grounding || {};
+    if (g.sentences) {
+      const pct = Math.round((g.coverage || 0) * 100);
+      const ok = g.verdict === 'ok';
+      let detail = '';
+
+      if (g.invalid_refs && g.invalid_refs.length) {
+        detail += `<div class="gl"><b>引用了不存在的编号</b>（模型编的）：${esc(g.invalid_refs.join(' '))}</div>`;
+      }
+      if (g.uncited && g.uncited.length) {
+        detail += `<div class="gl"><b>未标出处的句子</b>（${g.uncited.length} 句，重点复核）：<ul>` +
+          g.uncited.map(s => `<li>${esc(s)}</li>`).join('') + '</ul></div>';
+      }
+      if (g.weak && g.weak.length) {
+        detail += `<div class="gl"><b>与引用原文对不太上的句子</b>：<ul>` +
+          g.weak.map(s => `<li>${esc(s)}</li>`).join('') + '</ul></div>';
+      }
+      // 逐句定位：这句话大概在哪一页，直接给页码链接（含相邻页，应对"内容在上一页"）
+      if (g.attribution && g.attribution.length) {
+        detail += `<div class="gl"><b>逐句定位</b>（按吻合度从低到高，点页码直接核对原文）：<ul>` +
+          g.attribution.map(a => {
+            const doc = a.doc_id || (d.sources[0] && d.sources[0].doc_id) || 0;
+            const canJump = isPdf(a) && a.page;
+            const main = canJump
+              ? `<a class="pglink" target="_blank" rel="noopener" href="/api/documents/${doc}/file#page=${a.page}">第 ${a.page} 页 ↗</a>`
+              : `第 ${a.page} 段`;
+            const alt = (canJump && a.alt_pages && a.alt_pages.length)
+              ? ' 相邻：' + a.alt_pages.map(p =>
+                  `<a class="pglink" target="_blank" rel="noopener" href="/api/documents/${doc}/file#page=${p}">${p}</a>`).join(' ')
+              : '';
+            return `<li>${esc(a.sentence)}<br>　→ 最像 ${main}${alt}` +
+              `　吻合度 ${a.score}${a.supported ? '' : ' ⚠️ 未找到依据'}</li>`;
+          }).join('') + '</ul></div>';
+      }
+
+      $('groundBox').innerHTML =
+        `<div class="ground ${ok ? 'ok' : 'warn'}" onclick="toggleDetail(this)">` +
+        `${ok ? '✅' : '⚠️'} 引用校验：${g.sentences} 句中有 ${g.cited} 句标了出处（覆盖率 ${pct}%）· ` +
+        `<b>${esc(g.verdict)}</b>${g.repaired ? ' · 已自动补引用' : ''}` +
+        `<span class="more">展开明细 ▾</span></div>` +
+        `<div class="gdetail hide">${detail || '<div class="gl">没有需要特别提示的句子。</div>'}</div>`;
+    }
+
+    // 引用出处：回答里的 [1][2][3] 就是这个清单的编号；点页码直接打开原文对应页
+    const legend = '<div class="src-title">📖 资料原文出处 —— 回答里的 <b>[1][2][3]</b> 就是下面清单的编号，' +
+      '点「打开原文」可直接跳到 PDF 对应页（<b>一切以原文为准</b>）</div>';
+    $('sourceBox').innerHTML = legend + d.sources.map(s => {
+      const hit = (s.hit_by && s.hit_by.length > 1) ? ` · 被 ${s.hit_by.length} 条检索式命中` : '';
+      const canJump = isPdf(s) && s.page;
+      const pg = canJump ? `第 <b>${s.page}</b> 页` : `第 <b>${s.chunk_index}</b> 段`;
+      const link = canJump
+        ? ` <a class="pglink" target="_blank" rel="noopener" href="/api/documents/${s.doc_id}/file#page=${s.page}">打开原文第 ${s.page} 页 ↗</a>`
+        : '';
+      return `<div class="src">[${s.index}] 《${esc(s.title)}》${pg}（第 ${s.chunk_index} 段）${link}` +
+        ` · 相似度 <span class="score">${s.score}</span>${hit}<br>${esc(s.preview)}…</div>`;
+    }).join('');
+    loadLogs();
+  } catch (e) {
+    $('askStatus').textContent = '❌ 提问失败：' + e.message;
+  } finally {
+    $('btnAsk').disabled = false;
+  }
+}
+
+// ============ 资料列表 / 问答日志：演示"数据库读" ============
+// ============ 资料列表：带勾选框，支持多选删除 ============
+const picked = new Set();          // 当前勾选的资料 id
+
+function toggleSel(id, checked) {
+  checked ? picked.add(id) : picked.delete(id);
+  updatePickHint();
+}
+
+function updatePickHint() {
+  $('docHint').textContent = picked.size ? `已选 ${picked.size} 份` : '';
+}
+
+// 全选 / 取消全选
+function toggleAll() {
+  const boxes = Array.from(document.querySelectorAll('#docList .pick'));
+  const all = boxes.length > 0 && boxes.every(b => b.checked);
+  boxes.forEach(b => { b.checked = !all; const id = Number(b.dataset.id); !all ? picked.add(id) : picked.delete(id); });
+  updatePickHint();
+}
+
+async function loadDocs() {
+  try {
+    const d = await callApi('/api/documents');
+    // 清掉已经不存在于列表里的勾选（删除后刷新不会误删）
+    const alive = new Set(d.items.map(x => x.id));
+    [...picked].forEach(id => { if (!alive.has(id)) picked.delete(id); });
+    updatePickHint();
+    $('docCount').textContent = d.items.length
+      ? `（共 ${d.items.length} 份${d.items.length >= 4 ? '，可上下滚动' : ''}）`
+      : '';
+
+    $('docList').innerHTML = d.items.length
+      ? d.items.map(x => `<li>
+          <input type="checkbox" class="pick" data-id="${x.id}" ${picked.has(x.id) ? 'checked' : ''}
+                 onchange="toggleSel(${x.id}, this.checked)" />
+          <input class="noedit" data-id="${x.id}" data-cur="${x.serial === null ? '' : x.serial}"
+                 value="${x.display_no}" title="改完按回车保存，清空=自动编号"
+                 onkeydown="if(event.key==='Enter'){this.blur()} if(event.key==='Escape'){loadDocs()}"
+                 onblur="saveSerial(this)" />
+          《${esc(x.title)}》 · ${x.page_count || '-'} 页 / ${x.chunk_count} 段${
+            x.source === 'ocr' ? ' · <span class="ocr">OCR</span>' : ''} · ${esc(x.created_at)}
+          <button class="del" onclick="delDoc(${x.id})">删除</button>
+        </li>`).join('')
+      : '<li class="empty">暂无资料</li>';
+  } catch (e) { $('docList').innerHTML = '<li class="empty">读取失败</li>'; }
+}
+
+// 轻提示：右下角浮出 2 秒，不打断操作（比 alert 友好）
+function toast(msg) {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.className = 'show';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.className = ''; }, 2200);
+}
+
+// 编号就地编辑：输入框失焦/回车时保存；清空 = 恢复自动编号
+async function saveSerial(el) {
+  const id = Number(el.dataset.id);
+  const raw = el.value.trim();
+  const serial = raw === '' ? null : Number(raw);
+
+  if (serial !== null && (!Number.isInteger(serial) || serial < 1 || serial > 999)) {
+    alert('编号必须是 1-999 的整数');
+    loadDocs();
+    return;
+  }
+  if (String(serial) === el.dataset.cur) return;      // 没改动就不发请求
+  try {
+    await callApi('/api/documents/' + id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ serial })
+    });
+    // 编号一改就同步磁盘文件名，避免"界面显示 4、文件还叫 3"
+    const tidy = await callApi('/api/documents/tidy', { method: 'POST' });
+    await loadDocs();
+    toast(tidy.renamed ? `编号已保存，已同步重命名 ${tidy.renamed} 个文件` : '编号已保存');
+  } catch (e) {
+    alert('修改失败：' + e.message);
+    loadDocs();
+  }
+}
+
+// 一键重排编号：按上传顺序 1..N（删了又传导致编号乱跳时用）
+async function renumber() {
+  if (!confirm('按上传顺序把编号重排为 1,2,3…？')) return;
+  try {
+    await callApi('/api/documents/renumber', { method: 'POST' });
+    loadDocs();
+  } catch (e) { alert('重排失败：' + e.message); }
+}
+
+// 按编号整理磁盘文件名：把 uploads 里的 6_xxx.pdf 改成 1_xxx.pdf（只改文件名，数据不动）
+async function tidyFiles() {
+  if (!confirm('按当前编号把 uploads 里的文件重命名为「编号_标题.pdf」？\n（只改文件名，不影响检索和页码跳转）')) return;
+  try {
+    const r = await callApi('/api/documents/tidy', { method: 'POST' });
+    const lines = r.files.map(f => `${f.from}  →  ${f.to}`);
+    alert(`已重命名 ${r.renamed} 个文件` + (lines.length ? '\n\n' + lines.join('\n') : ''));
+  } catch (e) { alert('整理失败：' + e.message); }
+}
+
+// 删除单份（含向量和原始文件）
+async function delDoc(id) {
+  if (!confirm('确认删除资料 #' + id + '（含向量和原始文件）？')) return;
+  try {
+    await callApi('/api/documents/' + id, { method: 'DELETE' });
+    picked.delete(id);
+    loadDocs(); loadHealth();
+  } catch (e) { alert('删除失败：' + e.message); }
+}
+
+// 删除勾选的多份：逐个调用删除接口，最后汇总结果
+async function delSelected() {
+  const ids = [...picked];
+  if (!ids.length) { alert('请先勾选要删除的资料'); return; }
+  if (!confirm(`确认删除选中的 ${ids.length} 份资料（含向量和原始文件）？`)) return;
+
+  let ok = 0; const failed = [];
+  for (const id of ids) {
+    try { await callApi('/api/documents/' + id, { method: 'DELETE' }); ok++; }
+    catch (e) { failed.push(`#${id}: ${e.message}`); }
+  }
+  picked.clear();
+  loadDocs(); loadHealth();
+  alert(`已删除 ${ok} 份${failed.length ? `\n失败 ${failed.length} 份：\n${failed.join('\n')}` : ''}`);
+}
+
+// 清空全部资料：重新导入前用，二次确认防误触
+async function clearAll() {
+  if (!confirm('确认清空【全部】资料？所有段落、向量和原始文件都会被删除（问答日志保留）')) return;
+  if (!confirm('再确认一次：清空后要重新上传（扫描件需重新 OCR，约 2 分钟/24 页）')) return;
+  try {
+    const r = await callApi('/api/documents', { method: 'DELETE' });
+    picked.clear();
+    alert(`已清空：${r.deleted_documents} 份资料 / ${r.deleted_chunks} 段 / ${r.deleted_files} 个文件`);
+    loadDocs(); loadHealth();
+  } catch (e) { alert('清空失败：' + e.message); }
+}
+
+// ============ 问答日志：点一条展开完整回答 + 出处（只保留最近 10 条）============
+async function loadLogs() {
+  try {
+    const d = await callApi('/api/qa-logs?limit=10');
+    if (!d.items.length) { $('logList').innerHTML = '<li class="empty">暂无记录</li>'; return; }
+
+    $('logList').innerHTML = d.items.map(x => {
+      // 历史回答里的 [1][2] 也做成可点链接（和主回答一致的跳转体验）
+      const answerHtml = renderAnswer(x.answer, x.sources || []);
+      // 来源做成可点链接：翻历史记录时也能一键核对原文（仅 PDF 可跳页）
+      const src = (x.sources || []).map(s => (isPdf(s) && s.page)
+        ? `<a class="pglink" target="_blank" rel="noopener" onclick="event.stopPropagation()" ` +
+          `href="/api/documents/${s.doc_id}/file#page=${s.page}">[${s.index}] 第${s.page}页</a>`
+        : `[${s.index}] 第${s.chunk_index}段`).join(' ');
+      const g = x.grounding || {};
+      const gl = g.sentences
+        ? `引用覆盖率 ${Math.round((g.coverage || 0) * 100)}% · ${esc(g.verdict || '')}`
+        : '';
+      return `<li class="logitem" onclick="toggleLog(${x.id})">
+        <div class="loghead">${esc(x.created_at)} · ${Math.round(x.latency_ms)} ms · ${esc(x.model || '')}</div>
+        <div class="logq">Q：${esc(x.question)}</div>
+        <div class="logdetail hide" id="logd-${x.id}"><b>A：</b>${answerHtml}${
+          gl ? `<div style="margin-top:6px;">${gl}</div>` : ''}${
+          src ? `<div style="margin-top:6px;">来源：${src}</div>` : ''}</div>
+      </li>`;
+    }).join('');
+  } catch (e) { $('logList').innerHTML = '<li class="empty">读取失败</li>'; }
+}
+
+// 展开/收起某条历史问答
+function toggleLog(id) {
+  const el = document.getElementById('logd-' + id);
+  if (el) el.classList.toggle('hide');
+}
+
+// 回车即提问（Ctrl+Enter 更好按，避免打字换行误触发）
+$('question').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) ask();
+});
+
+loadHealth(); loadDocs(); loadLogs();
+</script>
+</body>
+</html>

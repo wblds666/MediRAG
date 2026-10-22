@@ -1,0 +1,14 @@
+# 运行时生成的数据与日志不进版本库（里面可能有真实医疗资料，注意合规）
+data/
+logs/
+.piptmp/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# 编辑器
+.vscode/
+.idea/
