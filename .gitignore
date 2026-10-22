@@ -12,3 +12,9 @@ venv/
 # 编辑器
 .vscode/
 .idea/
+
+# 录屏源文件：转成 docs/images/demo.gif 后再提交，原视频不入库
+*.mp4
+*.mov
+*.mkv
+.frames/

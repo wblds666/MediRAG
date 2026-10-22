@@ -93,6 +93,13 @@ curl -X POST http://localhost:8000/api/ask -H "Content-Type: application/json" \
 
 ## 二、界面截图
 
+### 0. 演示 GIF（15 秒全流程）
+
+![演示](images/demo.gif)
+
+提问"什么是水肿" → 回答带出处编号 → 点 `[1]` 跳到 PDF 第 7 页 → 引用校验 100% ok。
+由 `tools/video_to_gif.py` 从 17 秒录屏转换（900px / 10fps / 5.5MB / 174 帧）。
+
 ### 1. 主问答界面（回答 + 引用编号）
 
 ![主问答界面](images/01-qa.png)

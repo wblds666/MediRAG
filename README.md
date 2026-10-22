@@ -205,26 +205,22 @@ Word / PPT / Excel / 图片暂不支持，请先另存为 PDF。
 
 ## 演示材料
 
-运行效果截图与真实接口记录见 [`docs/demo.md`](docs/demo.md)，图片在 `docs/images/`。
+![演示：提问 → 点引用跳原文](docs/images/demo.gif)
 
-### 演示 GIF（可选，效果最好）
+15 秒录屏：提问"什么是水肿" → 回答带 `[1][2]` 出处 → 点 `[1]` 直接跳到 PDF 第 7 页 → 引用校验 100% ok。
 
-录一段 15~20 秒的操作（提问 → 点 `[1]` 跳到原文 → 展开引用校验），转成 GIF：
+更多截图与真实接口记录见 [`docs/demo.md`](docs/demo.md)，图片在 `docs/images/`。
+
+<details>
+<summary>这个 GIF 是怎么做的（点开）</summary>
 
 ```bash
 # 录制：Win + Alt + R（Windows 自带）、或 ScreenToGif（可直接导出 GIF）
-# 转换：截取第 2~22 秒，900px 宽、10fps
-python tools/video_to_gif.py demo.mp4 -o docs/images/demo.gif --start 2 --end 22 --fps 10 --width 900
+# 转换：900px 宽、10fps、两遍调色板，超过 8MB 自动降宽重试
+python tools/video_to_gif.py 演示.mp4 -o docs/images/demo.gif --fps 10 --width 900
 ```
 
-脚本用**两遍调色板法**（`palettegen` → `paletteuse`）：颜色比直接 `-vf scale` 准、体积约小一半；
-超过 8 MB 会自动降宽度重试。ffmpeg 二选一：`winget install Gyan.FFmpeg`，或 `pip install imageio-ffmpeg`。
-
-然后在上面"演示材料"里加一行：
-
-```markdown
-![演示](docs/images/demo.gif)
-```
+</details>
 
 ## 技术栈
 
