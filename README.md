@@ -10,7 +10,11 @@ Web 全栈 / REST API / SQLite / RAG / 工具调用 / Docker / Nginx / 日志 / 
 
 ![架构](docs/architecture.svg)
 
-运行效果截图与真实接口记录见 [`docs/demo.md`](docs/demo.md)。
+**回答带页码出处，点 [1] 直接跳到原文第 5 页：**
+
+![主问答界面](docs/images/01-qa.png)
+
+更多运行截图与真实接口记录见 [`docs/demo.md`](docs/demo.md)。
 
 ## 目录结构
 
@@ -200,8 +204,14 @@ Word / PPT / Excel / 图片暂不支持，请先另存为 PDF。
 
 ## 演示材料
 
-运行效果截图与真实接口记录见 [`docs/demo.md`](docs/demo.md)，图片放 `docs/images/`。
+运行效果截图与真实接口记录见 [`docs/demo.md`](docs/demo.md)，图片在 `docs/images/`。
 
 ## 技术栈
 
 FastAPI · LangChain（core / text-splitters / ollama）· SQLite · PyMuPDF · RapidOCR · Ollama（Qwen2.5 / bge-m3）· Docker · Nginx · 原生 HTML/JS
+
+## License
+
+[MIT](LICENSE) © 2026 wblds666
+
+> 本项目仅用于技术学习与演示，**不构成医疗器械或诊疗建议**；上传的资料请自行确认合规与脱敏。

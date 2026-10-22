@@ -1,0 +1,28 @@
+# 统一换行：仓库里一律存 LF，避免 Windows(CRLF) 与 Linux/macOS(LF) 混用
+# 导致"只改了一个字，diff 却显示整个文件都变了"的假修改
+* text=auto eol=lf
+
+# 二进制文件：不要让 git 尝试合并/比较内容，也不要转换换行
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+
+# 文本类型显式声明（GitHub 语言统计与 diff 高亮更准）
+*.py        text eol=lf diff=python
+*.md        text eol=lf
+*.html      text eol=lf
+*.css       text eol=lf
+*.js        text eol=lf
+*.json      text eol=lf
+*.yml       text eol=lf
+*.conf      text eol=lf
+*.txt       text eol=lf
+*.svg       text eol=lf
+Dockerfile  text eol=lf
+.gitignore  text eol=lf
