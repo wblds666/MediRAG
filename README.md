@@ -32,7 +32,7 @@ MediRAG/
 ├── docs/
 │   ├── architecture.svg    # 架构图（README 顶部引用）
 │   ├── demo.md             # 运行效果：接口记录 + 界面截图
-│   └── images/             # 8 张截图 + 17 秒演示 GIF
+│   └── images/             # 9 张截图 + 17 秒演示 GIF
 ├── Dockerfile              # 后端镜像
 ├── nginx.conf              # Nginx：托管前端 + 反代 /api
 ├── docker-compose.yml      # 一键起 Nginx + FastAPI + Ollama
@@ -69,6 +69,10 @@ docker compose exec ollama ollama pull qwen2.5:7b
 docker compose exec ollama ollama pull bge-m3
 # 打开 http://localhost:8080
 ```
+
+> 镜像构建由 **GitHub Actions** 在 `ubuntu-latest` 上真机验证（顶部徽章）：`docker build` +
+> 容器内 `import cv2`（扫描件 OCR 依赖）+ `import app` + `docker compose config`。
+> 实测镜像约 **959 MB**。工作流：`.github/workflows/docker-build.yml`
 
 ## 界面功能
 

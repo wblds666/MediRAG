@@ -152,3 +152,19 @@ curl -X POST http://localhost:8000/api/ask -H "Content-Type: application/json" \
 FastAPI 根据代码**自动生成**的交互式文档，`http://127.0.0.1:8000/docs` 打开即是：
 12 个接口、按 HTTP 方法着色（GET 蓝 / POST 绿 / PATCH 青 / DELETE 红），
 点任一接口可展开参数并 **Try it out** 直接发请求，底部 `Schemas` 是 `AskRequest` / `AskResponse` / `DocPatch` 等 Pydantic 模型的字段定义。
+
+### 9. CI 构建验证（GitHub Actions）
+
+![CI 构建验证](images/09-ci.png)
+
+每次 push，GitHub Actions 会在 `ubuntu-latest` 上真机构建镜像并跑 4 项检查：
+
+| 检查项 | 结果 | 说明 |
+| --- | --- | --- |
+| 镜像构建 | success | `docker build` 在 Linux 上通过（apt 装 libGL、pip 装依赖） |
+| OCR 依赖 (cv2) | 5.0.0 | 容器内 `import cv2` 正常 → 扫描件 OCR 可用 |
+| 应用导入 (app) | ok | FastAPI / LangChain / Pydantic 依赖齐全 |
+| compose 语法 | ok | `docker compose config` 校验通过 |
+| 镜像体积 | 959 MB | onnxruntime + opencv + numpy + PyMuPDF |
+
+工作流文件：[`.github/workflows/docker-build.yml`](../.github/workflows/docker-build.yml)
