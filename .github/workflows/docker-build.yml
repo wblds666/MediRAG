@@ -38,15 +38,21 @@ jobs:
 
       - name: 写入运行摘要
         if: always()
+        shell: bash
         run: |
+          CV2=$(docker run --rm medrag-api:test python -c 'import cv2, sys; sys.stdout.write(cv2.__version__)' 2>/dev/null || echo '未通过')
+          APP=$(docker run --rm medrag-api:test python -c 'import app' 2>/dev/null && echo ok || echo '未通过')
+          COMPOSE=$(docker compose config -q 2>/dev/null && echo ok || echo '未通过')
+          SIZE=$(docker images medrag-api:test --format '{{.Size}}')
+
           {
             echo "### Docker 构建验证"
             echo ""
             echo "| 检查项 | 结果 |"
             echo "| --- | --- |"
             echo "| 镜像构建 | ${{ job.status }} |"
-            echo "| OCR 依赖 (cv2) | $(docker run --rm medrag-api:test python -c 'import cv2;print(cv2.__version__)' 2>/dev/null || echo '未通过') |"
-            echo "| 应用导入 (app) | $(docker run --rm medrag-api:test python -c 'import app;print(\"ok\")' 2>/dev/null || echo '未通过') |"
-            echo "| compose 语法 | $(docker compose config -q 2>/dev/null && echo ok || echo '未通过') |"
-            echo "| 镜像体积 | $(docker images medrag-api:test --format '{{.Size}}') |"
+            echo "| OCR 依赖 (cv2) | ${CV2} |"
+            echo "| 应用导入 (app) | ${APP} |"
+            echo "| compose 语法 | ${COMPOSE} |"
+            echo "| 镜像体积 | ${SIZE} |"
           } >> "$GITHUB_STEP_SUMMARY"
