@@ -34,4 +34,4 @@ jobs:
         run: docker compose config -q
 
       - name: 镜像体积
-        run: docker images medrag-api:test --format "镜像大小: {{.Size}}"
+        run: docker images medrag-api:test --format '镜像大小={{.Size}}'
