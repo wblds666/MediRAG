@@ -1,5 +1,7 @@
 # MediRAG · 医疗知识库问答（RAG 最小可用实现）
 
+![docker-build](https://github.com/wblds666/MediRAG/actions/workflows/docker-build.yml/badge.svg)
+
 上传医疗资料 → 切分 → 向量化 → 检索 → 本地大模型（Ollama/Qwen）生成**带页码出处**的回答，
 并对每个回答自动做**引用校验**，标出"没标出处""和原文对不上"的句子。
 
